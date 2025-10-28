@@ -1,4 +1,80 @@
-     
+/**
+ * script.js — Plantilla de arranque (sin lógica del reproductor)
+ * - Aquí puedes pegar tu código JS completamente distinto.
+ * - Incluye utilidades: carga dinámica de scripts/estilos, bus simple y helpers SW.
+ */
+
+/* ========== UTILIDADES ========== */
+
+// Namespace global para acceder desde consola
+window._app = window._app || {};
+const APP = window._app;
+
+// Cargar script dinámicamente (útil para módulos grandes)
+APP.loadScript = function(url, opts = {}) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = url;
+    if (opts.module) s.type = 'module';
+    if (opts.defer) s.defer = true;
+    s.async = !!opts.async;
+    s.onload = () => resolve(s);
+    s.onerror = (e) => reject(e);
+    document.body.appendChild(s);
+  });
+};
+
+// Cargar CSS dinámicamente
+APP.loadCSS = function(url) {
+  return new Promise((resolve, reject) => {
+    const l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = url;
+    l.onload = () => resolve(l);
+    l.onerror = (e) => reject(e);
+    document.head.appendChild(l);
+  });
+};
+
+// Bus simple de eventos para desacoplar módulos
+APP.bus = (function() {
+  const map = new Map();
+  return {
+    on: (ev, fn) => { (map.get(ev) || map.set(ev,[])).get ? null : null; (map.get(ev) || map.set(ev,[])); map.get(ev).push(fn); },
+    off: (ev, fn) => { const arr = map.get(ev) || []; map.set(ev, arr.filter(x=>x!==fn)); },
+    emit: (ev, data) => { (map.get(ev) || []).slice().forEach(fn => { try{ fn(data); }catch(e){ console.warn('bus handler', e); } }); }
+  };
+})();
+
+/* ========== SERVICE WORKER HELPERS ========== */
+
+APP.sendToSW = async function(msg) {
+  if(!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) return null;
+  return new Promise((resolve) => {
+    const msgChan = new MessageChannel();
+    msgChan.port1.onmessage = (ev) => resolve(ev.data);
+    navigator.serviceWorker.controller.postMessage(msg, [msgChan.port2]);
+  });
+};
+
+// Ejemplos:
+// APP.sendToSW({type:'CACHE_URLS', payload:['/ruta1','/ruta2']});
+// APP.sendToSW({type:'CLEAR_CACHES'});
+
+/* ========== STORAGE SIMPLE ==========
+   Útil para guardar configuración/localState de tu otro código.
+*/
+APP.storage = {
+  get: (k, fallback=null) => {
+    try { const t = localStorage.getItem(k); return t ? JSON.parse(t) : fallback; } catch(e){ return fallback; }
+  },
+  set: (k, v) => {
+    try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){ console.warn('storage set', e); }
+  },
+  remove: (k) => { localStorage.removeItem(k); }
+};
+
+  
     const CONFIG = { YT_MAX_RESULTS: 25, API_KEYS: [ "AIzaSyCzu-Mqx22V83ktalXksUnC1AhtZwzyb-0","AIzaSyBM-uvKMHe5GxNuMpWB45-RWVUGYOGwEyQ","AIzaSyAd6JdvYn7YGMfSY9EaJtCEUGd11tKa6ZI","AIzaSyBr2nxeKaN1q07fMV59zrLEOQx9dzYBsMI","AIzaSyBbnepAY-irFm35H7Qu0NrwISzLCThkBKM","AIzaSyAujlR4Gig8puLuzM-amckcwu5sbMRvIR0","AIzaSyBiGJ9JeOdkrUI7x-qQHyrHpUJAxcwRTvI","AIzaSyC_UCUc3zcffX5_IOPFpqbJyXmUYxKOg9U","AIzaSyC7FYbsVmGA0LnepHG7t_xPOR0mEkQ1jiE","AIzaSyBLTPa7EUAmnJZMq4sYBT97x4HY3--YHws","AIzaSyDWAi-0_oqg5GHwEoE0_LnSLSV_nsfs1SI","AIzaSyBJ6zZI3BFvBd02EcdsJFE7dLdZ-f7RV9c","AIzaSyD_9Flh18VT4hJ0OkEIS3TCECJ4vIOcfC0","AIzaSyC3_rIZ5deseDbte7auVOo7oUDjopEMaBg","AIzaSyA9jC-p2NtbeppL8x0YKQqNkrdOggt3Q48" ], STORAGE_PREFIX: 'mp_' };
     const state = { visiblePlayer: null, hiddenPlayer: null, playersReady: false, pendingPlay: null, queuedTrack: null, currentKeyIndex: 0, currentTrack: null, currentQueue: [], currentQueueIndex: 0, favorites: [], libraries: [], recents: [], currentPage: 'home', isShuffle: false, isLoop: false, transferInProgress: false, isPlaying: false, lastPage: 'home', isSeeking: false, progressInterval: null, touchStartY: 0, touchMoveY: 0 };
     
@@ -253,3 +329,27 @@
         fetchPopularMusic(); fetchPlaylistsByQuery('Top music');
     }
     document.addEventListener('DOMContentLoaded', initApp);
+
+/**
+ * Reemplaza/borra todo lo de abajo y pega aquí tu código JS.
+ * Ejemplo mínimo de inicialización:
+ */
+document.addEventListener('DOMContentLoaded', function() {
+  // Código de ejemplo — puedes borrar estas 4 líneas
+  const root = document.getElementById('extrasRoot') || document.getElementById('app');
+  if(root) {
+    const p = document.createElement('p');
+    p.textContent = 'Tu código JS puede inicializarse aquí (DOMContentLoaded).';
+    p.style.textAlign = 'center';
+    p.style.color = '#666';
+    root.appendChild(p);
+  }
+
+  // Emite evento de arranque
+  APP.bus.emit('app.ready', { ts: Date.now() });
+});
+
+/* --- FIN: PEGA TU CÓDIGO AQUÍ --- */
+
+/* Exporta APP para debugging */
+window._app = APP;
