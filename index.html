@@ -11,11 +11,23 @@
 
   <!-- Estilos principales -->
   <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Si quieres mantener estilos extra en un archivo separado, descomenta:
-  <link rel="stylesheet" href="extra.css">
-  -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Pequeño script inline para diagnóstico (opcional) -->
+  <script>
+    // Muestra entorno básico (útil para comparar GitHub Pages vs AppCreator24)
+    window.__ENV_DEBUG = true;
+    window.__ENV_DEBUG_LOG = function() {
+      try {
+        console.log('ENV DEBUG — location.href=', location.href);
+        console.log('navigator.userAgent=', navigator.userAgent);
+        console.log('navigator.cookieEnabled=', navigator.cookieEnabled);
+        console.log('display-mode standalone?', window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+      } catch(e) {}
+    };
+  </script>
 </head>
+
 <body class="bg-gray-900 text-white h-full overflow-hidden flex flex-col">
 
     <div id="sidebar-backdrop" class="fixed inset-0 bg-black/50 z-40 hidden"></div>
@@ -90,14 +102,6 @@
     <div id="toast-root"></div>
 
   <!-- SCRIPTS -->
-  <!-- script.js contiene utilidades y el lugar para pegar JS (o cargar extra.js) -->
   <script src="script.js" defer></script>
-
-  <!-- Si prefieres mantener tu código en extra.js, carga extra.js después del principal:
-  <script src="extra.js" defer></script>
-  -->
-
-  <!-- Nota: si tu código necesita ejecutar algo inmediatamente antes de load,
-       puedes añadir un pequeño bloque inline aquí. -->
 </body>
 </html>
