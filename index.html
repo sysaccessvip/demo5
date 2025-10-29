@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Mi Proyecto</title>
+  <title>Mi Proyecto — Plantilla limpia</title>
 
   <!-- PWA manifest -->
   <link rel="manifest" href="./manifest.json">
@@ -40,14 +40,27 @@
         
         <div id="player-bg-image" class="absolute inset-0 w-full h-full bg-cover bg-center transition-all duration-500 z-0" style="filter: blur(24px); opacity: 0.3; transform: scale(1.2);"></div>
 
-        <header class="relative z-10 p-4 flex items-center space-x-2 flex-shrink-0">
-            <button id="minimize-player-btn" class="p-2 rounded-full hover:bg-gray-700"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg></button>
-            <span class="flex-1 text-center font-semibold">Reproduciendo...</span>
-            <div class="flex items-center gap-2">
-                <button id="fav-btn-full" class="p-2 rounded-full hover:bg-gray-700"><svg id="fav-icon-full" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.5l1.318-1.182a4.5 4.5 0 116.364 6.364L12 19.5l-7.682-7.682a4.5 4.5 0 010-6.364z" /></svg></button>
-                <button id="library-options-btn" class="p-2 rounded-full hover:bg-gray-700" title="Opciones de biblioteca"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" /></svg></button>
-            </div>
-        </header>
+
+<header class="relative z-10 p-4 flex items-center space-x-2 flex-shrink-0">
+    <button id="minimize-player-btn" class="p-2 rounded-full hover:bg-gray-700"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg></button>
+    <span class="flex-1 text-center font-semibold">Reproduciendo</span>
+    <div class="flex items-center gap-2">
+        <button id="fav-btn-full" class="p-2 rounded-full hover:bg-gray-700"><svg id="fav-icon-full" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.5l1.318-1.182a4.5 4.5 0 116.364 6.364L12 19.5l-7.682-7.682a4.5 4.5 0 010-6.364z" /></svg></button>
+
+        <!-- >>> BOTÓN MODO AUDIO (añadir) -->
+        <button id="audio-mode-btn" class="p-2 rounded-full hover:bg-gray-700" title="Modo audio (solo sonido)">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M11 5L6 9H2v6h4l5 4V5zM16.5 8.5a1 1 0 10-1.4-1.4 5 5 0 010 7.07 1 1 0 101.4-1.42 3 3 0 000-4.25zM19.5 5.5a1 1 0 10-1.4-1.4 9 9 0 010 12.72 1 1 0 101.4-1.42 7 7 0 000-9.9z"/>
+          </svg>
+        </button>
+        <!-- <<< FIN BOTÓN MODO AUDIO -->
+
+        <button id="library-options-btn" class="p-2 rounded-full hover:bg-gray-700" title="Opciones de biblioteca"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" /></svg></button>
+    </div>
+</header>
+
+
+
 
         <div id="player-main-view" class="relative z-10 flex-1 flex flex-col items-center justify-center p-4 min-h-0">
             <div class="w-full max-w-md relative">
@@ -105,4 +118,3 @@
   <script src="script.js" defer></script>
 </body>
 </html>
-

@@ -115,7 +115,9 @@ const state = {
   isSeeking: false,
   progressInterval: null,
   touchStartY: 0,
+    isAudioMode: false,
   touchMoveY: 0
+  
 };
 
 // ==== DOM REFERENCES (misma estructura que tu HTML original) ====
@@ -126,6 +128,8 @@ const dom = {
     homeCategoriesSection: document.getElementById('home-categories-section'), homePlaylistsSection: document.getElementById('home-playlists-section'), homePopularSection: document.getElementById('home-popular-section'),
     fullPlayer: document.getElementById('full-player'), minimizePlayerBtn: document.getElementById('minimize-player-btn'), playerVideoContainer: document.getElementById('player-video-container'), playerTitle: document.getElementById('player-title'), playerArtist: document.getElementById('player-artist'), favBtnFull: document.getElementById('fav-btn-full'), favIconFull: document.getElementById('fav-icon-full'), libraryOptionsBtn: document.getElementById('library-options-btn'),
     playerBgImage: document.getElementById('player-bg-image'), // <--- NUEVO ELEMENTO AÑADIDO
+        audioModeBtn: document.getElementById('audio-mode-btn'),
+
     playPauseBtn: document.getElementById('play-pause-btn'), playIcon: document.getElementById('play-icon'), pauseIcon: document.getElementById('pause-icon'), nextBtn: document.getElementById('next-btn'), prevBtn: document.getElementById('prev-btn'), shuffleBtn: document.getElementById('shuffle-btn'), loopBtn: document.getElementById('loop-btn'),
     miniPlayer: document.getElementById('mini-player'), maximizePlayerBtn: document.getElementById('maximize-player-btn'), miniPlayerThumb: document.getElementById('mini-player-thumb'), miniPlayerTitle: document.getElementById('mini-player-title'), miniPlayerArtist: document.getElementById('mini-player-artist'), miniPlayPauseBtn: document.getElementById('mini-play-pause-btn'), miniPlayIcon: document.getElementById('mini-play-icon'), miniPauseIcon: document.getElementById('mini-pause-icon'),
     playerIframeWrapper: document.getElementById('player-iframe-wrapper'), ytVisibleHolder: document.getElementById('yt_visible'), ytHiddenHolder: document.getElementById('yt_hidden_holder'), toastRoot: document.getElementById('toast-root'),
@@ -419,6 +423,16 @@ window.addEventListener('resize', () => { resizePlayers(); });
 
 function getActivePlayer() { return document.hidden ? (state.hiddenPlayer || state.visiblePlayer) : (state.visiblePlayer || state.hiddenPlayer); }
 
+// Devuelve el player que actualmente está reproduciendo (si lo hay) o el activo por visibilidad
+function getCurrentlyPlayingPlayer() {
+  try {
+    if (state.visiblePlayer && state.visiblePlayer.getPlayerState && state.visiblePlayer.getPlayerState() === YT.PlayerState.PLAYING) return state.visiblePlayer;
+    if (state.hiddenPlayer && state.hiddenPlayer.getPlayerState && state.hiddenPlayer.getPlayerState() === YT.PlayerState.PLAYING) return state.hiddenPlayer;
+  } catch(e){}
+  return getActivePlayer();
+}
+
+
 function loadAndPlayById(videoId, autoplay = true) {
   if (!videoId || !state.playersReady) { state.pendingPlay = { videoId, autoplay }; return; }
   const target = getActivePlayer();
@@ -452,6 +466,65 @@ function togglePlayPause() {
     else active.playVideo();
   } catch(e) { console.warn("togglePlayPause error", e); }
 }
+
+
+// Activa/desactiva modo audio (usa hiddenPlayer para reproducir audio y oculta la vista de vídeo)
+function setAudioMode(enabled) {
+  state.isAudioMode = !!enabled;
+  // Si los players no están listos, sólo actualizamos el estado visual y salimos
+  if (!state.playersReady || !state.currentTrack) {
+    // si hay una pista en cola, se aplicará cuando estén listos
+    if (!state.playersReady) {
+      showToast('Esperando que los reproductores terminen de cargar...');
+    }
+    // UI visual (ocultar/mostrar contenedor)
+    if (dom.playerVideoContainer) dom.playerVideoContainer.style.display = state.isAudioMode ? 'none' : '';
+    if (dom.audioModeBtn) dom.audioModeBtn.classList.toggle('text-yellow-400', state.isAudioMode);
+    return;
+  }
+
+  // Evitar múltiples transferencias simultáneas
+  if (state.transferInProgress) return;
+  state.transferInProgress = true;
+
+  const source = getCurrentlyPlayingPlayer() || getActivePlayer();
+  const target = state.isAudioMode ? (state.hiddenPlayer || state.visiblePlayer) : (state.visiblePlayer || state.hiddenPlayer);
+  const videoId = typeof state.currentTrack.id === 'object' ? state.currentTrack.id.videoId : state.currentTrack.id;
+
+  try {
+    const wasPlaying = source && source.getPlayerState && source.getPlayerState() === YT.PlayerState.PLAYING;
+    const currentTime = source && source.getCurrentTime ? source.getCurrentTime() : 0;
+
+    // Pausamos origen
+    try { if (source && source.pauseVideo) source.pauseVideo(); } catch(e){}
+
+    // Cargamos en target en mismo tiempo
+    if (target && target.loadVideoById && videoId) {
+      target.loadVideoById({ videoId, startSeconds: currentTime });
+      if (wasPlaying) {
+        setTimeout(() => { try { target.playVideo(); } catch(e){}; }, 150);
+      } else {
+        setTimeout(() => { try { target.pauseVideo(); } catch(e){}; }, 150);
+      }
+    }
+
+    // UI: ocultar vídeo si está en modo audio
+    if (dom.playerVideoContainer) dom.playerVideoContainer.style.display = state.isAudioMode ? 'none' : '';
+    if (dom.audioModeBtn) dom.audioModeBtn.classList.toggle('text-yellow-400', state.isAudioMode);
+
+    // liberamos bandera transferInProgress después de pequeña espera
+    setTimeout(()=> { state.transferInProgress = false; }, 400);
+  } catch (e) {
+    console.warn('setAudioMode error', e);
+    state.transferInProgress = false;
+  }
+}
+
+function toggleAudioMode() {
+  setAudioMode(!state.isAudioMode);
+}
+
+
 
 function playNext() {
   if (!state.currentQueue.length) return;
@@ -551,6 +624,8 @@ function showToast(text, ms = 2500) {
 
 // ================= Visibility / transfer logic (tu código) =================
 function handleVisibilityChange() {
+    if (state.isAudioMode) return; // si estamos en modo audio, no transferir por visibilitychange
+
   if (!state.playersReady || !state.currentTrack || state.transferInProgress) return;
   const videoId = typeof state.currentTrack.id === 'object' ? state.currentTrack.id.videoId : state.currentTrack.id;
   if (!videoId) return;
@@ -596,6 +671,7 @@ function initApp() {
     dom.loopBtn && dom.loopBtn.addEventListener('click', toggleLoop);
     dom.favBtnFull && dom.favBtnFull.addEventListener('click', toggleFavorite);
     dom.libraryOptionsBtn && dom.libraryOptionsBtn.addEventListener('click', () => openLibraryOptionsModal());
+    dom.audioModeBtn && dom.audioModeBtn.addEventListener('click', toggleAudioMode);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Barra progreso / playlist
